@@ -4,11 +4,10 @@ import axios from "axios";
 import { Send, MessageCircle, Users, MoreVertical, Smile, Paperclip, Phone, Video } from "lucide-react";
 
 const Chat = ({ username, room }) => {
-
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([]); // Always initialize as array
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
@@ -22,17 +21,29 @@ const Chat = ({ username, room }) => {
 
   useEffect(() => {
     const socket = getSocket();
-    if(!socket) return;
+    if (!socket) return;
 
     socket.emit("joinRoom", room);
 
     axios
       .get(`${apiUrl}/api/v1/chat/messages/${room}`, { withCredentials: true })
-      .then((res) => setMessages(res.data.messages))
-      .catch((err) => console.error("Failed to load old messages", err));
+      .then((res) => {
+        // Accept both array and object with .messages
+        if (Array.isArray(res.data)) {
+          setMessages(res.data);
+        } else if (Array.isArray(res.data.messages)) {
+          setMessages(res.data.messages);
+        } else {
+          setMessages([]);
+        }
+      })
+      .catch((err) => {
+        setMessages([]); // fallback to empty array on error
+        console.error("Failed to load old messages", err);
+      });
 
-    socket.on("roomMessages", (msgs) => setMessages(msgs));
-    socket.on("chatMessage", (msg) => setMessages((prev) => [...prev, msg]));
+    socket.on("roomMessages", (msgs) => setMessages(Array.isArray(msgs) ? msgs : []));
+    socket.on("chatMessage", (msg) => setMessages((prev) => Array.isArray(prev) ? [...prev, msg] : [msg]));
 
     return () => {
       socket.off("roomMessages");
@@ -53,7 +64,7 @@ const Chat = ({ username, room }) => {
   };
 
   const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    return (name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)) || 'U';
   };
 
   return (
@@ -78,7 +89,6 @@ const Chat = ({ username, room }) => {
               </p>
             </div>
           </div>
-          
           <div className="flex items-center space-x-1 lg:space-x-2">
             <button className="hidden sm:block p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
               <Phone className="h-4 w-4 lg:h-5 lg:w-5 text-gray-600" />
@@ -92,10 +102,9 @@ const Chat = ({ username, room }) => {
           </div>
         </div>
       </div>
-
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 lg:space-y-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-        {messages.length === 0 ? (
+        {Array.isArray(messages) && messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
             <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mb-4 lg:mb-6 shadow-inner">
               <MessageCircle className="h-10 w-10 lg:h-12 lg:w-12 text-indigo-400" />
@@ -107,10 +116,9 @@ const Chat = ({ username, room }) => {
           </div>
         ) : (
           <>
-            {messages.map((msg, idx) => {
+            {Array.isArray(messages) && messages.map((msg, idx) => {
               const isOwnMessage = msg.sender === username;
               const showAvatar = idx === 0 || messages[idx - 1].sender !== msg.sender;
-              
               return (
                 <div
                   key={idx}
@@ -126,20 +134,17 @@ const Chat = ({ username, room }) => {
                       {getInitials(msg.sender)}
                     </div>
                   </div>
-
                   {/* Message Bubble */}
                   <div className={`flex flex-col max-w-[280px] sm:max-w-xs lg:max-w-md ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                     {showAvatar && !isOwnMessage && (
                       <span className="text-xs font-medium text-gray-600 mb-1 px-1 hidden sm:block">{msg.sender}</span>
                     )}
-                    
                     <div className={`group relative px-3 lg:px-4 py-2.5 lg:py-3 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
                       isOwnMessage
                         ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-br-md'
                         : 'bg-white text-gray-800 rounded-bl-md border border-gray-200 hover:border-gray-300'
                     }`}>
                       <p className="text-sm leading-relaxed break-words">{msg.content}</p>
-                      
                       {/* Message timestamp */}
                       <div className={`text-xs mt-1 ${
                         isOwnMessage ? 'text-indigo-100' : 'text-gray-400'
@@ -155,7 +160,6 @@ const Chat = ({ username, room }) => {
           </>
         )}
       </div>
-
       {/* Typing Indicator */}
       {isTyping && (
         <div className="px-4 lg:px-6 py-2">
@@ -169,7 +173,6 @@ const Chat = ({ username, room }) => {
           </div>
         </div>
       )}
-
       {/* Enhanced Message Input */}
       <div className="bg-white/95 backdrop-blur-xl border-t border-gray-200/50 px-4 lg:px-6 py-3 lg:py-4 shadow-lg">
         <div className="flex items-end space-x-2 lg:space-x-4">
@@ -177,7 +180,6 @@ const Chat = ({ username, room }) => {
           <button className="hidden sm:block p-2.5 lg:p-3 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all duration-200 transform hover:scale-105">
             <Paperclip className="h-4 w-4 lg:h-5 lg:w-5" />
           </button>
-
           {/* Message Input Container */}
           <div className="flex-1 relative">
             <div className="flex items-end bg-gray-50 border border-gray-200 rounded-2xl focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all duration-200">
@@ -195,14 +197,12 @@ const Chat = ({ username, room }) => {
                 className="flex-1 px-3 lg:px-4 py-2.5 lg:py-3 bg-transparent border-none resize-none focus:outline-none placeholder-gray-500 max-h-32 scrollbar-thin scrollbar-thumb-gray-300 text-sm lg:text-base"
                 style={{ minHeight: '40px' }}
               />
-              
               {/* Emoji Button */}
               <button className="hidden sm:block p-2 text-gray-500 hover:text-indigo-600 transition-colors duration-200">
                 <Smile className="h-4 w-4 lg:h-5 lg:w-5" />
               </button>
             </div>
           </div>
-
           {/* Send Button */}
           <button
             onClick={sendMessage}
