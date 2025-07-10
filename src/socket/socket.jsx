@@ -2,10 +2,12 @@
 import { io } from "socket.io-client";
 
 let socket;
+  const apiUrl = import.meta.env.VITE_API_URL;
+
 
 export const connectSocket = () => {
   if(!socket){
-  socket = io("http://localhost:8080", {
+  socket = io(`${apiUrl}`, {
    withCredentials: true,
   });
 }
