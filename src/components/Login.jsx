@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Eye, EyeOff, User, Lock, MessageSquare, XCircle, Loader2 } from "lucide-react";
 
+
 axios.defaults.withCredentials = true;
 
 function Login({ onLogin, switchToRegister }) {
+
+  const apiUrl = import.meta.env.VITE_API_URL;
   const [formData, setFormData] = useState({
     username: "",
     password: ""
