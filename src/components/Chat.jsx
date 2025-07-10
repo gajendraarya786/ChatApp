@@ -4,6 +4,9 @@ import axios from "axios";
 import { Send, MessageCircle, Users, MoreVertical, Smile, Paperclip, Phone, Video } from "lucide-react";
 
 const Chat = ({ username, room }) => {
+
+  const apiUrl = import.meta.env.VITE_API_URL;
+
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -24,7 +27,7 @@ const Chat = ({ username, room }) => {
     socket.emit("joinRoom", room);
 
     axios
-      .get(`http://localhost:8080/api/v1/chat/messages/${room}`, { withCredentials: true })
+      .get(`${apiUrl}/api/v1/chat/messages/${room}`, { withCredentials: true })
       .then((res) => setMessages(res.data.messages))
       .catch((err) => console.error("Failed to load old messages", err));
 

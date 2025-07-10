@@ -9,6 +9,9 @@ import { LogOut, Settings, Hash, Users, MessageSquare, Zap, ChevronDown, Menu, X
 axios.defaults.withCredentials = true;
 
 function App() {
+
+  const apiUrl = import.meta.env.VITE_API_URL;
+
   const [user, setUser] = useState(null);
   const [room, setRoom] = useState("general");
   const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +23,7 @@ function App() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/v1/users/profile");
+        const res = await axios.get(`${apiUrl}/api/v1/users/profile`);
         setUser(res.data.user);
       } catch (err) {
         console.log("User not logged in");
@@ -94,7 +97,7 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:8080/api/v1/users/logout");
+      await axios.post(`${apiUrl}/api/v1/users/logout`);
     } catch (err) {
       console.log("Logout error:", err);
     }

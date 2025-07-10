@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Eye, EyeOff, User, Lock, MessageSquare, CheckCircle, XCircle, Loader2, UserPlus, Users, Zap, Shield } from "lucide-react";
 
 function Register({ onRegister, switchToLogin }) {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
   const [formData, setFormData] = useState({
     username: "",
     password: "",

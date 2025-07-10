@@ -58,7 +58,7 @@ function Login({ onLogin, switchToRegister }) {
     setErrors({});
 
     try {
-      const response = await axios.post("http://localhost:8080/api/v1/users/login", {
+      const response = await axios.post(`${apiUrl}/api/v1/users/login`, {
         username: formData.username.trim(),
         password: formData.password
       });
